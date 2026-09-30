@@ -7,16 +7,17 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       - PYTHONUTF8=1
-      - TRADING_MODE=paper
       - HOST=0.0.0.0
       - PORT=8000
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/scanner/run"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/risk/status"]
+      interval: 15s
+      timeout: 5s
       retries: 3
