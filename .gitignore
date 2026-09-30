@@ -18,10 +18,12 @@ venv.bak/
 # SQLite Database & Data
 *.db
 *.sqlite3
-data/*.db
+data/*
+!data/.gitkeep
 
 # Logs
-logs/
+logs/*
+!logs/.gitkeep
 *.log
 
 # IDE & OS

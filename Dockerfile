@@ -21,9 +21,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application source code
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
-COPY data/ ./data/
 COPY *.py ./
 COPY .env.example .env
+
+# Ensure data and logs directories exist in container
+RUN mkdir -p /app/data /app/logs
 
 # Expose port
 EXPOSE 8000
