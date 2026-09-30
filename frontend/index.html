@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoTrader Pro | Indian Stock Market Scanner & Algo Trading Platform</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Lightweight Charts for TradingView grade candlesticks (v4.2.1) -->
+    <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        
+        <!-- TOP HEADER BAR -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i data-lucide="scan-line"></i>
+                    </div>
+                    <div class="logo-text">
+                        <span class="logo-title">AlgoTrader<span class="highlight">PRO</span></span>
+                        <span class="logo-subtitle">NSE Scanner & Algo Engine</span>
+                    </div>
+                </div>
+
+                <div class="market-pill closed" id="market-status-pill">
+                    <span class="pulse-indicator closed" id="market-pulse"></span>
+                    <span id="market-status-text">NSE MARKET CLOSED</span>
+                </div>
+            </div>
+
+            <!-- LIVE INDICES TICKER -->
+            <div class="indices-ticker" id="indices-ticker">
+                <div class="index-item" id="idx-nifty50">
+                    <span class="idx-name">NIFTY 50</span>
+                    <span class="idx-val">₹24,800.00</span>
+                    <span class="idx-chg positive">+0.00%</span>
+                </div>
+                <div class="index-item" id="idx-banknifty">
+                    <span class="idx-name">BANK NIFTY</span>
+                    <span class="idx-val">₹52,100.00</span>
+                    <span class="idx-chg positive">+0.00%</span>
+                </div>
+                <div class="index-item" id="idx-sensex">
+                    <span class="idx-name">SENSEX</span>
+                    <span class="idx-val">₹81,200.00</span>
+                    <span class="idx-chg positive">+0.00%</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="btn btn-sm btn-practice" id="btn-toggle-practice" title="Simulate price movements when market is closed for practice/testing">
+                    <i data-lucide="play-circle"></i>
+                    <span id="practice-btn-text">Practice Ticks: OFF</span>
+                </button>
+
+                <div class="mode-badge paper-mode">
+                    <i data-lucide="shield-check"></i>
+                    <span>PAPER TRADING</span>
+                </div>
+
+                <div class="connection-status" id="ws-status" title="System Connection">
+                    <span class="status-dot connected"></span>
+                    <span class="status-text">Live 1s</span>
+                </div>
+
+                <div class="clock-box" id="ist-clock">
+                    <i data-lucide="clock"></i>
+                    <span id="time-display">00:00:00 IST</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <div class="main-layout">
+            
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+                <nav class="nav-menu">
+                    <button class="nav-item active" data-tab="scanner">
+                        <i data-lucide="crosshair"></i>
+                        <span>Stock Scanner</span>
+                        <span class="badge" id="scanner-buy-badge">0</span>
+                    </button>
+                    <button class="nav-item" data-tab="charts">
+                        <i data-lucide="candlestick-chart"></i>
+                        <span>5M Chart & Setup</span>
+                    </button>
+                    <button class="nav-item" data-tab="backtest">
+                        <i data-lucide="history"></i>
+                        <span>Backtesting</span>
+                    </button>
+                    <button class="nav-item" data-tab="portfolio">
+                        <i data-lucide="briefcase"></i>
+                        <span>Paper Portfolio</span>
+                    </button>
+                    <button class="nav-item" data-tab="risk">
+                        <i data-lucide="shield-alert"></i>
+                        <span>Risk & Sizing</span>
+                    </button>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <div class="system-health-mini">
+                        <div class="health-row">
+                            <span>Price Filter</span>
+                            <span class="health-tag info">&lt; ₹2,500</span>
+                        </div>
+                        <div class="health-row">
+                            <span>Kill Switch</span>
+                            <span class="health-tag success" id="sidebar-kill-status">SAFE</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT AREA -->
+            <main class="content-area">
+                
+                <!-- TOP SCANNER SUMMARY CARDS -->
+                <section class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Scanned Universe</span>
+                            <i data-lucide="layers" class="stat-icon"></i>
+                        </div>
+                        <div class="stat-value" id="card-scanned">35 Stocks</div>
+                        <div class="stat-footer muted">NSE Equities under ₹2,500</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">BUY SETUPS</span>
+                            <i data-lucide="check-circle-2" class="stat-icon positive"></i>
+                        </div>
+                        <div class="stat-value positive" id="card-buy-setups">0 Stocks</div>
+                        <div class="stat-footer muted">EMA 9>21 + RSI>50 + VWAP</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">WATCH LIST</span>
+                            <i data-lucide="eye" class="stat-icon" style="color: var(--color-amber);"></i>
+                        </div>
+                        <div class="stat-value" id="card-watch-stocks" style="color: var(--color-amber);">0 Stocks</div>
+                        <div class="stat-footer muted">Approaching Breakout</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Paper Capital & Risk</span>
+                            <i data-lucide="wallet" class="stat-icon"></i>
+                        </div>
+                        <div class="stat-value" id="card-capital">₹50,000.00</div>
+                        <div class="stat-footer muted">Max Risk per Trade: 1.0% (₹500)</div>
+                    </div>
+                </section>
+
+                <!-- TAB 1: SCANNER VIEW -->
+                <div class="tab-content active" id="tab-scanner">
+                    <section class="watchlist-section">
+                        <div class="section-header">
+                            <div class="section-title">
+                                <i data-lucide="filter"></i>
+                                <h2>Automated NSE Stock Scanner</h2>
+                            </div>
+                            <div class="watchlist-actions">
+                                <div class="filter-pills">
+                                    <button class="filter-pill active" data-filter="ALL">All Stocks</button>
+                                    <button class="filter-pill" data-filter="BUY SETUP">Buy Setups</button>
+                                    <button class="filter-pill" data-filter="WATCH">Watch</button>
+                                </div>
+                                <button class="btn btn-primary" id="btn-run-scan">
+                                    <i data-lucide="refresh-cw"></i> Rescan Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="market-table" id="scanner-table">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Sector</th>
+                                        <th class="text-right">Price (₹)</th>
+                                        <th class="text-right">Change</th>
+                                        <th class="text-right">EMA 9 / 21</th>
+                                        <th class="text-right">RSI (14)</th>
+                                        <th class="text-right">VWAP (₹)</th>
+                                        <th class="text-center">Scores (T / F)</th>
+                                        <th class="text-center">Signal</th>
+                                        <th class="text-right">Entry / SL / Target</th>
+                                        <th class="text-right">Pos Size</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scanner-tbody">
+                                    <!-- Populated via scanner API -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- TAB 2: 5M CHART & DETAIL VIEW -->
+                <div class="tab-content" id="tab-charts">
+                    <section class="chart-section">
+                        <div class="chart-header">
+                            <div class="chart-stock-info">
+                                <select id="selected-symbol-select" class="symbol-dropdown">
+                                    <!-- Populated via JS -->
+                                </select>
+                                <div class="live-price-group">
+                                    <span class="chart-ltp" id="chart-ltp">₹0.00</span>
+                                    <span class="chart-change" id="chart-change">+0.00%</span>
+                                </div>
+                            </div>
+
+                            <div class="timeframe-group">
+                                <button class="tf-btn active" data-tf="5m">5m Strategy</button>
+                                <button class="tf-btn" data-tf="15m">15m</button>
+                                <button class="tf-btn" data-tf="1d">1D</button>
+                            </div>
+
+                            <div class="chart-indicators">
+                                <label class="indicator-pill active" id="toggle-ema">EMA (9, 21)</label>
+                                <label class="indicator-pill active" id="toggle-volume">Volume</label>
+                            </div>
+                        </div>
+
+                        <!-- Candlestick chart -->
+                        <div id="tradingview-chart" class="tv-chart"></div>
+
+                        <!-- Fundamental metrics cards -->
+                        <div class="fundamentals-grid" id="fundamentals-grid">
+                            <div class="fund-card"><span class="f-label">P/E Ratio</span><span class="f-val" id="f-pe">-</span></div>
+                            <div class="fund-card"><span class="f-label">P/B Ratio</span><span class="f-val" id="f-pb">-</span></div>
+                            <div class="fund-card"><span class="f-label">ROE %</span><span class="f-val" id="f-roe">-</span></div>
+                            <div class="fund-card"><span class="f-label">ROCE %</span><span class="f-val" id="f-roce">-</span></div>
+                            <div class="fund-card"><span class="f-label">Debt / Equity</span><span class="f-val" id="f-de">-</span></div>
+                            <div class="fund-card"><span class="f-label">Market Cap (Cr)</span><span class="f-val" id="f-mcap">-</span></div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- TAB 3: BACKTESTING VIEW -->
+                <div class="tab-content" id="tab-backtest">
+                    <section class="panel-box">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i data-lucide="play"></i>
+                                <h3>EMA 9/21 + RSI Strategy Backtester</h3>
+                            </div>
+                        </div>
+                        
+                        <div class="backtest-form-grid">
+                            <div class="form-group">
+                                <label>Stock Symbol</label>
+                                <select id="bt-symbol" class="form-control">
+                                    <option value="RELIANCE">RELIANCE</option>
+                                    <option value="HDFCBANK">HDFCBANK</option>
+                                    <option value="INFY">INFY</option>
+                                    <option value="ICICIBANK">ICICIBANK</option>
+                                    <option value="SBIN">SBIN</option>
+                                    <option value="TATAMOTORS">TATAMOTORS</option>
+                                    <option value="ITC">ITC</option>
+                                    <option value="BHARTIARTL">BHARTIARTL</option>
+                                    <option value="TATASTEEL">TATASTEEL</option>
+                                    <option value="WIPRO">WIPRO</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Historical Period</label>
+                                <select id="bt-days" class="form-control">
+                                    <option value="15">15 Days (5m Candles)</option>
+                                    <option value="30" selected>30 Days (5m Candles)</option>
+                                    <option value="60">60 Days (5m Candles)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Capital (₹)</label>
+                                <input type="number" id="bt-capital" class="form-control" value="50000">
+                            </div>
+                            <div class="form-group">
+                                <label>Risk per Trade %</label>
+                                <input type="number" id="bt-risk" class="form-control" value="1.0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label>Stop Loss %</label>
+                                <input type="number" id="bt-sl" class="form-control" value="1.5" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label>Target %</label>
+                                <input type="number" id="bt-target" class="form-control" value="3.0" step="0.1">
+                            </div>
+                            <div class="form-group" style="align-self: flex-end;">
+                                <button class="btn btn-primary" id="btn-run-backtest" style="width: 100%;">
+                                    <i data-lucide="zap"></i> Run Backtest Simulation
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Backtest Results Display -->
+                        <div id="bt-results-container" style="display: none; margin-top: 20px;">
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-header"><span class="stat-label">Net P&L</span></div>
+                                    <div class="stat-value" id="bt-net-pnl">₹0.00</div>
+                                    <div class="stat-footer muted" id="bt-pnl-pct">0.00% Return</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header"><span class="stat-label">Win Rate</span></div>
+                                    <div class="stat-value" id="bt-winrate">0.0%</div>
+                                    <div class="stat-footer muted" id="bt-trade-counts">0 Wins / 0 Losses</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header"><span class="stat-label">Profit Factor</span></div>
+                                    <div class="stat-value" id="bt-profit-factor">0.0</div>
+                                    <div class="stat-footer muted">Gross Gains / Gross Losses</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header"><span class="stat-label">Max Drawdown</span></div>
+                                    <div class="stat-value val-red" id="bt-drawdown">0.0%</div>
+                                    <div class="stat-footer muted" id="bt-charges-paid">Taxes & Brokerage: ₹0.00</div>
+                                </div>
+                            </div>
+
+                            <h4 style="margin: 20px 0 10px 0;">Recent Simulated Trades</h4>
+                            <div class="table-responsive">
+                                <table class="market-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Entry Time</th>
+                                            <th>Exit Time</th>
+                                            <th>Symbol</th>
+                                            <th class="text-right">Qty</th>
+                                            <th class="text-right">Entry</th>
+                                            <th class="text-right">Exit</th>
+                                            <th class="text-right">Net P&L</th>
+                                            <th class="text-center">Exit Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bt-trades-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- TAB 4: PAPER TRADING VIEW -->
+                <div class="tab-content" id="tab-portfolio">
+                    <section class="panel-box">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i data-lucide="briefcase"></i>
+                                <h3>Paper Trading Positions & Execution Log</h3>
+                            </div>
+                            <button class="btn btn-sm btn-outline" id="btn-refresh-orders">
+                                <i data-lucide="refresh-cw"></i> Refresh Orders
+                            </button>
+                        </div>
+
+                        <h4>Open Positions</h4>
+                        <div class="table-responsive" style="margin-bottom: 24px;">
+                            <table class="market-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Symbol</th>
+                                        <th>Side</th>
+                                        <th class="text-right">Qty</th>
+                                        <th class="text-right">Entry (₹)</th>
+                                        <th class="text-right">Current (₹)</th>
+                                        <th class="text-right">Stop Loss</th>
+                                        <th class="text-right">Target</th>
+                                        <th class="text-right">P&L (₹)</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="open-positions-tbody">
+                                    <tr><td colspan="10" class="text-center muted">No active positions open.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h4>Order Audit History</h4>
+                        <div class="table-responsive">
+                            <table class="market-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Order ID</th>
+                                        <th>Symbol</th>
+                                        <th>Side</th>
+                                        <th class="text-right">Qty</th>
+                                        <th class="text-right">Entry (₹)</th>
+                                        <th class="text-right">Exit (₹)</th>
+                                        <th class="text-right">Realized P&L</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="order-history-tbody">
+                                    <tr><td colspan="9" class="text-center muted">No orders executed yet.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- TAB 5: RISK MANAGEMENT VIEW -->
+                <div class="tab-content" id="tab-risk">
+                    <section class="panel-box">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i data-lucide="shield-alert"></i>
+                                <h3>Risk Controls & Emergency Circuit Breakers</h3>
+                            </div>
+                        </div>
+
+                        <div class="risk-controls-container">
+                            <div class="kill-switch-box">
+                                <div>
+                                    <h4>Emergency Kill Switch</h4>
+                                    <p class="muted">Immediately halt all automated scanning and paper order execution.</p>
+                                </div>
+                                <button class="btn btn-kill" id="btn-kill-switch">
+                                    <i data-lucide="power"></i> Activate Kill Switch
+                                </button>
+                            </div>
+
+                            <div class="health-grid" style="margin-top: 20px;">
+                                <div class="health-item">
+                                    <span class="h-label">Position Sizing Rule</span>
+                                    <span class="h-val badge-blue">Risk Amt / (Entry - SL)</span>
+                                </div>
+                                <div class="health-item">
+                                    <span class="h-label">Max Risk Per Trade</span>
+                                    <span class="h-val badge-green">1.0% (₹500.00)</span>
+                                </div>
+                                <div class="health-item">
+                                    <span class="h-label">Max Daily Drawdown Limit</span>
+                                    <span class="h-val badge-purple">2.0% (-₹1,000.00)</span>
+                                </div>
+                                <div class="health-item">
+                                    <span class="h-label">Max Concurrent Positions</span>
+                                    <span class="h-val badge-blue">3 Positions</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- QUICK PAPER TRADE MODAL -->
+        <div class="modal" id="paper-trade-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Execute Paper Trade Order</h3>
+                    <button class="modal-close" id="modal-trade-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="trade-modal-summary" style="margin-bottom: 16px;"></div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-primary" id="btn-confirm-trade" style="flex: 1;">
+                            Confirm Paper BUY Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

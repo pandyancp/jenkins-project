@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  algotrader:
+    build: .
+    container_name: algotrader-pro
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUTF8=1
+      - TRADING_MODE=paper
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/scanner/run"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
